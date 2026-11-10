@@ -5,6 +5,10 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isOwner() {
+      return signedIn() && request.auth.uid == 'XtAHdNSQ2OfXFZikyjFh67O6MVw1';
+    }
+
     function hasUserProfile() {
       return signedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid));
@@ -20,6 +24,52 @@ service cloud.firestore {
 
     function isResponder() {
       return hasUserProfile() && userDoc().role == 'user';
+    }
+
+    function validAdminApproval(userId) {
+      let requestPath = /databases/$(database)/documents/adminRequests/$(userId);
+      return isOwner()
+        && request.resource.data.id == userId
+        && request.resource.data.role == 'admin'
+        && request.resource.data.name is string
+        && request.resource.data.org is string
+        && request.resource.data.email is string
+        && request.resource.data.createdAt is string
+        && request.resource.data.keys().hasOnly([
+          'id', 'role', 'name', 'org', 'email', 'createdAt'
+        ])
+        && exists(requestPath)
+        && get(requestPath).data.status == 'pending'
+        && request.resource.data.name == get(requestPath).data.name
+        && request.resource.data.org == get(requestPath).data.org
+        && request.resource.data.email == get(requestPath).data.email;
+    }
+
+    function validAdminRequest(requestId) {
+      return request.resource.data.id == requestId
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.org is string
+        && request.resource.data.org.size() > 0
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 0
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt is string
+        && request.resource.data.keys().hasOnly([
+          'id', 'name', 'org', 'email', 'status', 'createdAt'
+        ]);
+    }
+
+    function validApprovedRequest(requestId) {
+      let profileAfter = getAfter(/databases/$(database)/documents/users/$(requestId));
+      return isOwner()
+        && resource.data.status == 'pending'
+        && existsAfter(/databases/$(database)/documents/users/$(requestId))
+        && profileAfter.data.id == requestId
+        && profileAfter.data.role == 'admin'
+        && profileAfter.data.name == resource.data.name
+        && profileAfter.data.org == resource.data.org
+        && profileAfter.data.email == resource.data.email;
     }
 
     function ownTeam() {
@@ -66,18 +116,21 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
-      allow create: if signedIn()
-        && request.auth.uid == userId
-        && request.resource.data.id == userId
-        && request.resource.data.role == 'user'
-        && request.resource.data.email == request.auth.token.email
-        && request.resource.data.teamId is string
-        && exists(/databases/$(database)/documents/teams/$(request.resource.data.teamId))
-        && request.resource.data.keys().hasOnly([
-          'id', 'role', 'name', 'org', 'email', 'teamId', 'responderId',
-          'status', 'sharing', 'locMode', 'nextCheckin', 'createdAt'
-        ]);
-      allow update: if isAdmin()
+      allow create: if (
+          signedIn()
+          && request.auth.uid == userId
+          && request.resource.data.id == userId
+          && request.resource.data.role == 'user'
+          && request.resource.data.email == request.auth.token.email
+          && request.resource.data.teamId is string
+          && exists(/databases/$(database)/documents/teams/$(request.resource.data.teamId))
+          && request.resource.data.keys().hasOnly([
+            'id', 'role', 'name', 'org', 'email', 'teamId', 'responderId',
+            'status', 'sharing', 'locMode', 'nextCheckin', 'createdAt'
+          ])
+        )
+        || validAdminApproval(userId);
+      allow update: if (isAdmin() && request.resource.data.role == resource.data.role)
         || (signedIn()
           && request.auth.uid == userId
           && resource.data.role == 'user'
@@ -92,20 +145,14 @@ service cloud.firestore {
     match /adminRequests/{requestId} {
       allow create: if signedIn()
         && request.auth.uid == requestId
-        && request.resource.data.id == requestId
-        && request.resource.data.name is string
-        && request.resource.data.name.size() > 0
-        && request.resource.data.org is string
-        && request.resource.data.org.size() > 0
-        && request.resource.data.email is string
-        && request.resource.data.email.size() > 0
-        && request.resource.data.status == 'pending'
-        && request.resource.data.createdAt is string
-        && request.resource.data.keys().hasOnly([
-          'id', 'name', 'org', 'email', 'status', 'createdAt'
-        ]);
-      allow read: if isAdmin() || (signedIn() && request.auth.uid == requestId);
-      allow update, delete: if isAdmin();
+        && validAdminRequest(requestId);
+      allow read: if isOwner() || isAdmin() || (signedIn() && request.auth.uid == requestId);
+      allow update: if isAdmin()
+        || (signedIn()
+          && request.auth.uid == requestId
+          && resource.data.status == 'pending'
+          && validAdminRequest(requestId));
+      allow delete: if isAdmin() || validApprovedRequest(requestId);
     }
 
     match /teams/{teamId} {
@@ -141,11 +188,12 @@ service cloud.firestore {
     match /incidents/{incidentId} {
       allow read: if isAdmin()
         || (isResponder() && resource.data.teamId == ownTeam());
-      allow create: if isResponder()
-        && request.resource.data.teamId == ownTeam()
-        && request.resource.data.reporterId == request.auth.uid
-        && request.resource.data.reporterName == userDoc().name
-        && request.resource.data.status == 'Open';
+      allow create: if isAdmin()
+        || (isResponder()
+          && request.resource.data.teamId == ownTeam()
+          && request.resource.data.reporterId == request.auth.uid
+          && request.resource.data.reporterName == userDoc().name
+          && request.resource.data.status == 'Open');
       allow update, delete: if isAdmin();
     }
 
@@ -157,11 +205,12 @@ service cloud.firestore {
     match /sos/{sosId} {
       allow read: if isAdmin()
         || (isResponder() && resource.data.teamId == ownTeam());
-      allow create: if isResponder()
-        && request.resource.data.teamId == ownTeam()
-        && request.resource.data.senderId == request.auth.uid
-        && request.resource.data.senderName == userDoc().name
-        && request.resource.data.status == 'Active';
+      allow create: if isAdmin()
+        || (isResponder()
+          && request.resource.data.teamId == ownTeam()
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.senderName == userDoc().name
+          && request.resource.data.status == 'Active');
       allow update, delete: if isAdmin();
     }
   }

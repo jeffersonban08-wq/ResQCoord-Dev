@@ -28,7 +28,9 @@ The project is configured to host the existing HTML app at the project root and 
 
 The Hosting deploy publishes the app and Firestore rules. Team documents are created or migrated the first time an administrator signs in to the hosted app; an administrator profile must already exist as described above.
 
-Administrator registration is a separate access-request form. Requests are stored in Firestore's `adminRequests` collection and do not grant command-center access. To approve a request, the project owner creates a `users/{uid}` document using the request's UID as the document ID, with fields `id` (same UID), `role` (`admin`), `name`, `org`, `email`, and `createdAt`. Until this profile exists, admin sign-in is denied. Responders continue to register separately from the responder portal.
+Administrator registration is a separate access-request form. Requests are stored in Firestore's `adminRequests` collection and do not grant command-center access. The project owner can review and approve pending requests from `https://resqcoord1.web.app/owner-dashboard.html`, using the Firebase Authentication account with the owner UID configured in `Javascript/owner.js` and `firestore.rules`. Approval creates the user's `users/{uid}` administrator profile and removes the pending request together. Until this profile exists, admin sign-in is denied. Responders continue to register separately from the responder portal.
+
+If the owner account changes, update its UID in both `Javascript/owner.js` and `firestore.rules`, then publish the Firestore rules again.
 
 ## Important
 

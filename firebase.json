@@ -41,6 +41,10 @@
         "destination": "/Html/admin-dashboard.html"
       },
       {
+        "source": "/owner-dashboard.html",
+        "destination": "/Html/owner-dashboard.html"
+      },
+      {
         "source": "/",
         "destination": "/Html/index.html"
       }
