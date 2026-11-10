@@ -93,17 +93,26 @@ const Auth = (() => {
     try {
       await firebaseDb.collection('adminRequests').doc(user.uid).set({
         id: user.uid,
-        name: fields.name,
-        org: fields.org,
-        email: user.email,
+        name: fields.name.trim(),
+        org: fields.org.trim(),
+        email: user.email || fields.email.trim().toLowerCase(),
         status: 'pending',
         createdAt: new Date().toISOString()
       });
-      await firebaseAuth.signOut();
     } catch (error) {
-      await user.delete();
+      // Remove the newly-created Auth account when the request itself failed.
+      // Do not let cleanup errors hide the original Firestore error.
+      try { await user.delete(); }
+      catch (cleanupError) { console.error('Could not clean up failed admin request account:', cleanupError); }
+      if (error.code === 'permission-denied') {
+        throw new Error('Firebase denied the administrator access request. Publish the repository firestore.rules file and confirm the app is connected to the intended Firebase project.');
+      }
       throw error;
     }
+
+    // Sign-out is deliberately outside the write failure handler: a sign-out
+    // issue must not delete an account after its access request was saved.
+    await firebaseAuth.signOut();
   }
 
   async function login(role, email, password) {
