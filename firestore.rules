@@ -5,16 +5,21 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function hasUserProfile() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
     function userDoc() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
     function isAdmin() {
-      return signedIn() && userDoc().role == 'admin';
+      return hasUserProfile() && userDoc().role == 'admin';
     }
 
     function isResponder() {
-      return signedIn() && userDoc().role == 'user';
+      return hasUserProfile() && userDoc().role == 'user';
     }
 
     function ownTeam() {
@@ -88,8 +93,14 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.auth.uid == requestId
         && request.resource.data.id == requestId
-        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.org is string
+        && request.resource.data.org.size() > 0
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 0
         && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt is string
         && request.resource.data.keys().hasOnly([
           'id', 'name', 'org', 'email', 'status', 'createdAt'
         ]);
