@@ -1,0 +1,49 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "package.json",
+      "package-lock.json",
+      "FIREBASE_SETUP.md",
+      "firestore.rules",
+      "Web.config",
+      "Code/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/user-login.html",
+        "destination": "/Html/user-login.html"
+      },
+      {
+        "source": "/user-register.html",
+        "destination": "/Html/user-register.html"
+      },
+      {
+        "source": "/user-dashboard.html",
+        "destination": "/Html/user-dashboard.html"
+      },
+      {
+        "source": "/admin-login.html",
+        "destination": "/Html/admin-login.html"
+      },
+      {
+        "source": "/admin-register.html",
+        "destination": "/Html/admin-register.html"
+      },
+      {
+        "source": "/admin-dashboard.html",
+        "destination": "/Html/admin-dashboard.html"
+      },
+      {
+        "source": "/",
+        "destination": "/Html/index.html"
+      }
+    ]
+  }
+}

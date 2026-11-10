@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ResQCoord · Responder Login</title>
+  <link rel="stylesheet" href="../Css/style.css">
+</head>
+<body class="auth" data-role="user" data-mode="login">
+  <main class="auth-card">
+    <div class="brand"><span class="logo">R</span><div><b>ResQCoord</b><small>FIELD RESPONDER</small></div></div>
+    <h1>Sign in to your field account</h1>
+    <p class="muted">Enter your credentials to access your dashboard.</p>
+    <form id="form">
+      <label>Email</label><input type="email" id="email" required placeholder="j.reyes@resqcoord.ph">
+      <label>Password</label><input type="password" id="password" required>
+      <p class="error" id="error"></p>
+      <button class="btn primary block">Sign In</button>
+    </form>
+    <p class="switch">Don't have an account? <a href="user-register.html">Register</a></p>
+    <p class="switch"><a href="index.html">← Back</a></p>
+   
+  </main>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="../Javascript/firebase-init.js"></script>
+  <script src="../Javascript/db.js"></script><script src="../Javascript/auth.js"></script><script src="../Javascript/authpage.js"></script>
+</body>
+</html>

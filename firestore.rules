@@ -1,0 +1,157 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return signedIn() && userDoc().role == 'admin';
+    }
+
+    function isResponder() {
+      return signedIn() && userDoc().role == 'user';
+    }
+
+    function ownTeam() {
+      return userDoc().teamId;
+    }
+
+    function validInitialTeam(teamId) {
+      return request.resource.data.id == teamId
+        && request.resource.data.keys().hasOnly([
+          'id', 'name', 'members', 'status', 'lat', 'lng', 'note', 'target'
+        ])
+        && (
+          (teamId == 'T-ALPHA'
+            && request.resource.data.name == 'Team Alpha'
+            && request.resource.data.members == 12
+            && request.resource.data.status == 'On site'
+            && request.resource.data.lat == 16.4031
+            && request.resource.data.lng == 120.5987
+            && request.resource.data.note == 'North spur')
+          || (teamId == 'T-BRAVO'
+            && request.resource.data.name == 'Team Bravo'
+            && request.resource.data.members == 9
+            && request.resource.data.status == 'En route'
+            && request.resource.data.lat == 16.3985
+            && request.resource.data.lng == 120.6045
+            && request.resource.data.note == 'Sector B'
+            && request.resource.data.target == [16.4092, 120.6003])
+          || (teamId == 'T-CHARLIE'
+            && request.resource.data.name == 'Team Charlie'
+            && request.resource.data.members == 8
+            && request.resource.data.status == 'SOS'
+            && request.resource.data.lat == 16.4092
+            && request.resource.data.lng == 120.6003
+            && request.resource.data.note == 'Sector C')
+          || (teamId == 'T-DELTA'
+            && request.resource.data.name == 'Team Delta'
+            && request.resource.data.members == 4
+            && request.resource.data.status == 'Standby'
+            && request.resource.data.lat == 16.396
+            && request.resource.data.lng == 120.59
+            && request.resource.data.note == 'East ridge')
+        );
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.id == userId
+        && request.resource.data.role == 'user'
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.teamId is string
+        && exists(/databases/$(database)/documents/teams/$(request.resource.data.teamId))
+        && request.resource.data.keys().hasOnly([
+          'id', 'role', 'name', 'org', 'email', 'teamId', 'responderId',
+          'status', 'sharing', 'locMode', 'nextCheckin', 'createdAt'
+        ]);
+      allow update: if isAdmin()
+        || (signedIn()
+          && request.auth.uid == userId
+          && resource.data.role == 'user'
+          && request.resource.data.role == 'user'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'name', 'phone', 'lat', 'lng', 'acc', 'lastSeen', 'locMode',
+            'status', 'nextCheckin', 'sharing'
+          ]));
+      allow delete: if isAdmin();
+    }
+
+    match /adminRequests/{requestId} {
+      allow create: if signedIn()
+        && request.auth.uid == requestId
+        && request.resource.data.id == requestId
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.status == 'pending'
+        && request.resource.data.keys().hasOnly([
+          'id', 'name', 'org', 'email', 'status', 'createdAt'
+        ]);
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == requestId);
+      allow update, delete: if isAdmin();
+    }
+
+    match /teams/{teamId} {
+      allow read: if isAdmin()
+        || (isResponder() && resource.data.id == ownTeam());
+      allow create: if isAdmin()
+        || (signedIn() && validInitialTeam(teamId));
+      allow delete: if isAdmin();
+      allow update: if isAdmin()
+        || (isResponder()
+          && resource.data.id == ownTeam()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lat', 'lng', 'status']));
+    }
+
+    match /missions/{missionId} {
+      allow read: if isAdmin()
+        || (isResponder() && resource.data.teamId == ownTeam());
+      allow write: if isAdmin();
+    }
+
+    match /messages/{messageId} {
+      allow read: if isAdmin()
+        || (isResponder() && resource.data.teamId in [ownTeam(), 'ALL']);
+      allow create: if isAdmin()
+        || (isResponder()
+          && request.resource.data.teamId == ownTeam()
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.senderName == userDoc().name
+          && request.resource.data.role == 'user');
+      allow update, delete: if isAdmin();
+    }
+
+    match /incidents/{incidentId} {
+      allow read: if isAdmin()
+        || (isResponder() && resource.data.teamId == ownTeam());
+      allow create: if isResponder()
+        && request.resource.data.teamId == ownTeam()
+        && request.resource.data.reporterId == request.auth.uid
+        && request.resource.data.reporterName == userDoc().name
+        && request.resource.data.status == 'Open';
+      allow update, delete: if isAdmin();
+    }
+
+    match /resources/{resourceId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /sos/{sosId} {
+      allow read: if isAdmin()
+        || (isResponder() && resource.data.teamId == ownTeam());
+      allow create: if isResponder()
+        && request.resource.data.teamId == ownTeam()
+        && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.senderName == userDoc().name
+        && request.resource.data.status == 'Active';
+      allow update, delete: if isAdmin();
+    }
+  }
+}

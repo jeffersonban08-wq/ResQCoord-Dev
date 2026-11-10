@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ResQCoord · Admin Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="../Css/style.css">
+
+</head>
+<body class="app">
+  <aside class="sidebar">
+    <div class="brand"><span class="logo">R</span><div><b>ResQCoord</b><small>ADMIN ONLY</small></div></div>
+    <span class="tag">ADMIN ONLY</span>
+    <nav id="nav">
+      <a data-view="dashboard" class="active">▦ Dashboard</a>
+      <a data-view="map">🗺 Live Map</a>
+      <a data-view="missions">🎯 Missions</a>
+      <a data-view="personnel">👥 Personnel</a>
+      <a data-view="resources">🧰 Resources</a>
+      <a data-view="incidents">⚠ Incidents</a>
+      <a data-view="reports">📊 Reports</a>
+      <a data-view="users">🔐 User Management</a>
+      <a data-view="settings">⚙ Settings</a>
+    </nav>
+    <div class="side-bottom">
+      <small class="muted">QUICK ACTIONS</small>
+      <button class="btn primary block" id="qMission">+ New Mission</button>
+      <button class="btn danger block" id="qSos">🚨 SOS Alert</button>
+      <div class="net ok" id="net"></div>
+    </div>
+  </aside>
+
+  <section class="main">
+    <header class="topbar">
+      <div><h2 id="title"></h2><p class="muted" id="sub"></p></div>
+      <div class="who"><span class="pill" id="clock"></span><div><b id="adminName"></b><br><small class="muted">Administrator · Duty Commander</small></div><button class="btn small" id="logout">Logout</button></div>
+    </header>
+    <div id="view"></div>
+  </section>
+
+  <div id="modal" class="modal"></div>
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="../Javascript/firebase-init.js"></script>
+  <script src="../Javascript/jutil.js"></script><script src="../Javascript/db.js"></script><script src="../Javascript/auth.js"></script>
+  <script src="../Javascript/mapkit.js"></script><script src="../Javascript/admin.js"></script>
+</body>
+</html>

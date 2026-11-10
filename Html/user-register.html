@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ResQCoord · Responder Register</title>
+  <link rel="stylesheet" href="../Css/style.css">
+
+</head>
+<body class="auth" data-role="user" data-mode="register">
+  <main class="auth-card">
+    <div class="brand"><span class="logo">R</span><div><b>ResQCoord</b><small>FIELD RESPONDER</small></div></div>
+    <h1>Create a responder account</h1>
+    <p class="muted">Join your rescue team on ResQCoord.</p>
+    <form id="form">
+      <label>Full name</label><input id="name" required placeholder="J. Reyes">
+      <label>Team</label><select id="team"></select>
+      <label>Email</label><input type="email" id="email" required>
+      <label>Password</label><input type="password" id="password" required minlength="6">
+      <p class="error" id="error"></p>
+      <button class="btn primary block">Create Account</button>
+    </form>
+    <p class="switch">Already have an account? <a href="user-login.html">Sign In</a></p>
+  </main>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="../Javascript/firebase-init.js"></script>
+  <script src="../Javascript/db.js"></script><script src="../Javascript/auth.js"></script><script src="../Javascript/authpage.js"></script>
+</body>
+</html>

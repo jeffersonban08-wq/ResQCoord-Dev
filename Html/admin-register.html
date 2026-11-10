@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ResQCoord · Administrator Registration</title>
+  <link rel="stylesheet" href="../Css/style.css">
+
+</head>
+<body class="auth" data-role="admin" data-mode="register">
+  <main class="auth-card">
+    <div class="brand"><span class="logo">R</span><div><b>ResQCoord</b><small>COMMAND CENTER · ADMIN ONLY</small></div></div>
+    <h1>Request administrator access</h1>
+    <p class="muted">Submit your details to the project owner. Admin access is enabled only after approval.</p>
+    <form id="form">
+      <label>Full name</label><input id="name" required autocomplete="name">
+      <label>Organization</label><input id="org" required>
+      <label>Email</label><input type="email" id="email" required autocomplete="email">
+      <label>Password</label><input type="password" id="password" required minlength="6" autocomplete="new-password">
+      <p class="error" id="error" aria-live="polite"></p>
+      <button class="btn primary block">Submit access request</button>
+    </form>
+    <p class="switch">Already approved? <a href="admin-login.html">Sign in</a></p>
+    <p class="switch"><a href="index.html">← Back</a></p>
+  </main>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="../Javascript/firebase-init.js"></script>
+  <script src="../Javascript/db.js"></script><script src="../Javascript/auth.js"></script><script src="../Javascript/authpage.js"></script>
+</body>
+</html>
